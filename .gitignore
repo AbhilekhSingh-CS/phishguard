@@ -1,0 +1,12 @@
+# Dataset files (too large for GitHub)
+Dataset.csv
+clean_dataset.csv
+uci_dataset.arff
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Mac files
+.DS_Store
