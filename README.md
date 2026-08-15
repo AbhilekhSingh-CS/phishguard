@@ -11,7 +11,13 @@ Paste any URL → ML model analyzes 30 features → instant phishing/safe verdic
 - **Backend:** Python, Flask REST API
 - **Frontend:** HTML, CSS, Vanilla JavaScript
 
-## Model Performance
+## Two Models
+
+This project contains two trained models.
+
+**Model A — full feature set (30 features)**
+Trained on the complete UCI dataset. This is the research benchmark.
+
 | Metric | Score |
 |--------|-------|
 | Accuracy | 97.60% |
@@ -19,41 +25,39 @@ Paste any URL → ML model analyzes 30 features → instant phishing/safe verdic
 | Recall | 96.63% |
 | F1 Score | 97.28% |
 
-## Features Extracted from URLs
-- IP address as domain detection
-- SSL certificate state
-- URL length analysis
-- Domain prefix/suffix patterns
-- Subdomain count
-- Shortening service detection
-- 24 more features...
+**Model B — URL-only (14 features)**  ← used by the live API
 
-## How to Run
+| Metric | Score |
+|--------|-------|
+| Accuracy | 90.64% |
+| Precision | 89.80% |
+| Recall | 88.98% |
+| F1 Score | 89.39% |
 
-### 1. Install dependencies
-pip install flask flask-cors scikit-learn pandas numpy scipy
+### Why two models?
 
-### 2. Download UCI Phishing Dataset
-Download from: https://archive.ics.uci.edu/dataset/327/phishing+websites
-Place as uci_dataset.arff in project folder
+16 of the 30 UCI features cannot be computed from a URL string alone — they
+require WHOIS lookups (domain age), DNS queries, traffic ranking APIs, or
+fetching the page itself (anchor URLs, iframes, form handlers).
 
-### 3. Train the model
-python3 step6_train_uci.py
+The original API hardcoded those 16 as constants. Four of them defaulted to
+`-1`, which UCI encodes as phishing-like, so every URL received four automatic
+phishing votes. Legitimate sites such as google.com were being flagged.
 
-### 4. Start the API
-python3 step4_api.py
+Model B is trained only on the 14 features computable from a URL string, so no
+input is fabricated at inference time. Accuracy drops by 7 points, but the
+number reflects what the deployed system actually achieves.
 
-### 5. Open frontend
-Open index.html in your browser
+On the same 2,211-URL test set, missed phishing rose from 33 to 108 — the
+concrete cost of the unavailable features.
 
-## Project Structure
-- step1_explore.py — Dataset exploration
-- step2_preprocess.py — Data cleaning
-- step3_train.py — First model training
-- step6_train_uci.py — Final model training (UCI dataset)
-- step4_api.py — Flask REST API
-- index.html — Frontend UI
+### Known limitations
 
-## Author
-Abhilekh Singh — B.Tech CSE, Pranveer Singh Institute of Technology
-GitHub: https://github.com/AbhilekhSingh-CS
+- **SSLfinal_State** is the most important feature (66% of Model B's decisions),
+  but is approximated. UCI defines it as HTTPS + trusted issuer + certificate
+  older than one year; the API only checks for `https://`. A phishing site with
+  a fresh Let's Encrypt certificate would appear legitimate.
+- The model detects **structural** anomalies, not **semantic** ones. A clean-looking
+  lookalike domain passes. Catching those needs brand-similarity or edit-distance checks.
+- The UCI dataset is from 2015. Free TLS certificates have since weakened the
+  SSL signal considerably.
