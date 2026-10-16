@@ -5,6 +5,7 @@ import pandas as pd
 import re
 from urllib.parse import urlparse
 from lookups import check_dns, check_whois
+from lookups import check_dns, check_whois, check_ssl
 
 app = Flask(__name__)
 CORS(app)
@@ -45,11 +46,11 @@ def extract_features(url):
         sub = -1
 
     if ip:
-        ssl = -1
-    elif https:
-        ssl = 1
+        dns_record, age, reg_length, ssl_state = -1, -1, -1, -1
     else:
-        ssl = 0
+        dns_record = check_dns(domain)
+        age, reg_length = check_whois(domain)
+        ssl_state = check_ssl(domain)
 
     if ip:
         stat = -1
@@ -77,7 +78,7 @@ def extract_features(url):
         "double_slash_redirecting": -1 if "//" in path else 1,
         "Prefix_Suffix": -1 if "-" in domain else 1,
         "having_Sub_Domain": sub,
-        "SSLfinal_State": ssl,
+        "SSLfinal_State": ssl_state,
         "port": -1 if (prt and prt not in [80, 443]) else 1,
         "HTTPS_token": -1 if "https" in domain.lower() else 1,
         "Submitting_to_email": -1 if "mailto:" in url.lower() else 1,
