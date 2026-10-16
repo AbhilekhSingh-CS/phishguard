@@ -4,14 +4,15 @@ import pickle
 import pandas as pd
 import re
 from urllib.parse import urlparse
+from lookups import check_dns, check_whois
 
 app = Flask(__name__)
 CORS(app)
 
 print("Loading URL-only model...")
-with open("model_urlonly.pkl", "rb") as f:
+with open("model_v2.pkl", "rb") as f:
     model = pickle.load(f)
-with open("feature_names_urlonly.pkl", "rb") as f:
+with open("feature_names_v2.pkl", "rb") as f:
     feature_names = pickle.load(f)
 print("Model loaded! Using", len(feature_names), "features")
 
@@ -62,6 +63,12 @@ def extract_features(url):
     except ValueError:
         prt = None
 
+    if ip:
+        dns_record, age, reg_length = -1, -1, -1
+    else:
+        dns_record = check_dns(domain)
+        age, reg_length = check_whois(domain)
+
     features = {
         "having_IP_Address": -1 if ip else 1,
         "URL_Length": 1 if L < 54 else (0 if L <= 75 else -1),
@@ -77,6 +84,9 @@ def extract_features(url):
         "Abnormal_URL": 1 if domain and domain in url else -1,
         "Redirect": 1 if url.count("//") > 1 else 0,
         "Statistical_report": stat,
+        "DNSRecord": dns_record,
+        "age_of_domain": age,
+        "Domain_registeration_length": reg_length,
     }
     return features, url
 
@@ -105,6 +115,10 @@ def predict():
     vector = pd.DataFrame([[features[f] for f in feature_names]], columns=feature_names)
     probability = model.predict_proba(vector)[0]
     phishing_prob = float(probability[1])
+    # Safety rule: a raw IP instead of a domain name is almost always a scam.
+    # The UCI dataset is noisy here (about 50/50), so we don't rely on the model alone.
+    if features["having_IP_Address"] == -1:
+        phishing_prob = max(phishing_prob, 0.90)
 
     is_phishing = phishing_prob >= 0.50
 
@@ -130,7 +144,7 @@ def predict():
 if __name__ == "__main__":
     print("\n=============================")
     print("  Phishing Detector API v2")
-    print("  URL-only model, 14 features")
+    print("Loading 17-feature model...")
     print("  Running on: http://localhost:8080")
     print("=============================\n")
     app.run(debug=True, port=8080)
