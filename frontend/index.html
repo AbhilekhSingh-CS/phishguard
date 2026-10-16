@@ -326,7 +326,7 @@ async function checkAPI() {
     } else throw new Error();
   } catch {
     document.getElementById("statusDot").className = "status-dot offline";
-    document.getElementById("statusText").textContent = "API Offline — run step4_api.py";
+    document.getElementById("statusText").textContent = "API Offline";
   }
 }
 
