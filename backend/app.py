@@ -4,8 +4,7 @@ import pickle
 import pandas as pd
 import re
 from urllib.parse import urlparse
-from lookups import check_dns, check_whois
-from lookups import check_dns, check_whois, check_ssl
+from lookups import get_lookups
 
 app = Flask(__name__)
 CORS(app)
@@ -48,9 +47,10 @@ def extract_features(url):
     if ip:
         dns_record, age, reg_length, ssl_state = -1, -1, -1, -1
     else:
-        dns_record = check_dns(domain)
-        age, reg_length = check_whois(domain)
-        ssl_state = check_ssl(domain)
+        lookups = get_lookups(domain)
+        if lookups is None:
+            return None, url
+        dns_record, age, reg_length, ssl_state = lookups
 
     if ip:
         stat = -1
@@ -63,12 +63,6 @@ def extract_features(url):
         prt = parsed.port
     except ValueError:
         prt = None
-
-    if ip:
-        dns_record, age, reg_length = -1, -1, -1
-    else:
-        dns_record = check_dns(domain)
-        age, reg_length = check_whois(domain)
 
     features = {
         "having_IP_Address": -1 if ip else 1,
@@ -112,6 +106,8 @@ def predict():
         return jsonify({"error": "Empty url"}), 400
 
     features, url = extract_features(url)
+    if features is None:
+        return jsonify({"error": "WHOIS server timed out. Please try again later."}), 503
 
     vector = pd.DataFrame([[features[f] for f in feature_names]], columns=feature_names)
     probability = model.predict_proba(vector)[0]

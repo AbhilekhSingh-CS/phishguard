@@ -270,7 +270,7 @@
   <header>
     <div class="badge"><div class="badge-dot"></div>AI-POWERED · ML MODEL · REAL-TIME</div>
     <h1>PhishGuard</h1>
-    <p class="subtitle">Paste any URL. Our ML model analyzes 22 features to detect phishing threats instantly.</p>
+    <p class="subtitle">Paste any URL. Our ML model analyzes 17 features to detect phishing threats instantly.</p>
   </header>
 
   <div class="search-card">
@@ -355,9 +355,13 @@ async function scanURL() {
       body: JSON.stringify({ url })
     });
     const data = await res.json();
+    if (!res.ok) {
+      showError(data.error || "Something went wrong. Please try again.");
+      return;
+    }
     renderResult(data);
   } catch(e) {
-    showError("Cannot reach API. Make sure step4_api.py is running.");
+        showError("Cannot reach the server. Make sure the backend is running.");
   } finally {
     document.getElementById("loading").classList.remove("visible");
     document.getElementById("scanBtn").disabled = false;

@@ -1,12 +1,8 @@
-from lookups import check_ssl
+import time
+from lookups import get_lookups
 
-tests = [
-    "google.com",              # real, trusted        → expect 1
-    "self-signed.badssl.com",  # self-made ID card    → expect 0
-    "expired.badssl.com",      # expired ID card      → expect 0
-    "neverssl.com",            # no HTTPS at all      → expect -1
-    "abcxyz-fake-site-12345.com",  # doesn't exist    → expect -1
-]
-
-for d in tests:
-    print(d, "→ SSL:", check_ssl(d))
+for attempt in [1, 2]:
+    start = time.time()
+    result = get_lookups("google.com")
+    seconds = time.time() - start
+    print(f"Attempt {attempt}: {result} took {seconds:.2f} seconds")

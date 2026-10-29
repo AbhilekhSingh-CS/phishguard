@@ -2,6 +2,7 @@ import whois
 import dns.resolver
 import ssl
 import socket
+import time
 from datetime import datetime
 
 
@@ -33,7 +34,8 @@ def check_whois(domain):
         reg_length = 1 if days_left > 365 else -1
         return age, reg_length
     except Exception:
-        return -1, -1
+        return None
+
 
 def check_ssl(domain):
     context = ssl.create_default_context()
@@ -45,4 +47,32 @@ def check_ssl(domain):
     except ssl.SSLCertVerificationError:
         return 0
     except Exception:
-        return -1    
+        return -1
+
+
+CACHE = {}
+CACHE_SECONDS = 24 * 60 * 60
+
+
+def get_lookups(domain):
+    now = time.time()
+
+    if domain in CACHE:
+        saved_time, result = CACHE[domain]
+        if now - saved_time < CACHE_SECONDS:
+            return result
+
+    dns_record = check_dns(domain)
+    whois_result = check_whois(domain)
+
+    if whois_result is None:
+        if dns_record == 1:
+            return None
+        whois_result = (-1, -1)
+
+    age, reg_length = whois_result
+    ssl_state = check_ssl(domain)
+
+    result = (dns_record, age, reg_length, ssl_state)
+    CACHE[domain] = (now, result)
+    return result
