@@ -144,4 +144,4 @@ if __name__ == "__main__":
     print("Loading 17-feature model...")
     print("  Running on: http://localhost:8080")
     print("=============================\n")
-    app.run(debug=True, port=8080)
+    app.run(debug=False, port=8080)
