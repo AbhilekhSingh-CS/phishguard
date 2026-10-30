@@ -3,7 +3,7 @@
 PhishGuard checks whether a link is safe or a phishing scam. It combines a
 machine learning model with real-time DNS, WHOIS and SSL certificate checks.
 
-🔗 **Live demo:** 👉 https://phishguard-abhilekh.vercel.app
+🔗 **Live demo:** https://phishguard-abhilekh.vercel.app
 
 ![PhishGuard screenshot](docs/screenshot.png)
 
@@ -119,6 +119,6 @@ automatically when opened locally.
 
 Final-year major project, B.Tech CS(AI), PSIT Kanpur.
 
-👉 Atreya Singh Sengar, Ankit Singh, Abhilekh Singh, Abhishek Singh, Anubhav Tiwari
+👉 Abhilekh Singh, Atreya Singh Sengar, Ankit Singh, Abhishek Singh, Anubhav Tiwari
 
 Supervised by Mr. Ashish Kumar Singh, Assistant Professor, Department of AI, PSIT.
