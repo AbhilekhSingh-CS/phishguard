@@ -109,6 +109,9 @@ def predict():
     if features is None:
         return jsonify({"error": "WHOIS server timed out. Please try again later."}), 503
 
+    if features["DNSRecord"] == -1 and features["having_IP_Address"] == 1:
+        return jsonify({"error": "This website does not exist or is offline. Don't trust this link: it may be a fake or removed scam site."}), 404
+    
     vector = pd.DataFrame([[features[f] for f in feature_names]], columns=feature_names)
     probability = model.predict_proba(vector)[0]
     phishing_prob = float(probability[1])
