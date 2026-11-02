@@ -5,9 +5,20 @@ import pandas as pd
 import re
 from urllib.parse import urlparse
 from lookups import get_lookups
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
 CORS(app)
+
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    storage_uri="memory://",
+)
 
 print("Loading URL-only model...")
 with open("model_v2.pkl", "rb") as f:
@@ -124,6 +135,9 @@ def get_red_flags(features):
 
     return flags
 
+@app.errorhandler(429)
+def too_many_requests(e):
+    return jsonify({"error": "Too many scans. Please wait a minute and try again."}), 429
 
 @app.route("/", methods=["GET"])
 def home():
@@ -135,6 +149,7 @@ def home():
 
 
 @app.route("/predict", methods=["POST"])
+@limiter.limit("10 per minute")
 def predict():
     data = request.get_json()
     if not data or "url" not in data:
