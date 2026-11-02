@@ -258,6 +258,16 @@
     .feat-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; }
     .feat-name { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
     .feat-val  { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text); }
+        .red-flags { margin-top: 20px; }
+    .red-flags h4 { margin: 0 0 10px; font-size: 14px; letter-spacing: 1px; }
+    .flag {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
     @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeUp   { from { opacity: 0; transform: translateY(20px);  } to { opacity: 1; transform: translateY(0); } }
     @keyframes spin     { to { transform: rotate(360deg); } }
@@ -305,6 +315,7 @@
     <div class="conf-label"><span>Model Confidence</span><span id="confPercent">0%</span></div>
     <div class="conf-bar-bg"><div class="conf-bar-fill" id="confBar"></div></div>
     <div class="stats-grid" id="statsGrid"></div>
+    <div class="red-flags" id="redFlags"></div>
     <div class="features-section">
       <div class="features-toggle" id="featToggle" onclick="toggleFeatures()">
         <span class="arrow">▶</span><span>View Extracted Features</span>
@@ -404,7 +415,10 @@ function renderResult(data) {
     { label: "LEGIT PROB", value: (data.legit_probability * 100).toFixed(1) + "%" },
     { label: "RISK LEVEL", value: risk }
   ].map(s => `<div class="stat-box"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div></div>`).join("");
-
+  const flags = data.red_flags || [];
+  document.getElementById("redFlags").innerHTML = flags.length
+    ? "<h4>🚩 RED FLAGS FOUND</h4>" + flags.map(f => `<div class="flag">🚩 ${f}</div>`).join("")
+    : "<h4>✅ NO RED FLAGS FOUND</h4>";
   const feats = data.features || {};
   document.getElementById("featuresGrid").innerHTML = Object.entries(feats)
     .map(([k,v]) => `<div class="feat-item"><span class="feat-name">${k}</span><span class="feat-val">${typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(4)) : v}</span></div>`)

@@ -85,6 +85,40 @@ def extract_features(url):
     }
     return features, url
 
+RED_FLAG_MESSAGES = {
+    "having_IP_Address": "Uses an IP address instead of a website name",
+    "URL_Length": "The URL is unusually long",
+    "Shortining_Service": "Uses a link shortener that hides the real website",
+    "having_At_Symbol": "Contains an @ symbol, which can hide the real address",
+    "double_slash_redirecting": "Contains '//' in the path, which can redirect you elsewhere",
+    "Prefix_Suffix": "The domain contains a hyphen (-), common in fake sites",
+    "having_Sub_Domain": "Has too many subdomains",
+    "SSLfinal_State": "No HTTPS or SSL certificate",
+    "port": "Uses an unusual port number",
+    "HTTPS_token": "Puts the word 'https' inside the domain name to look secure",
+    "Submitting_to_email": "Tries to send your information to an email address",
+    "Abnormal_URL": "The URL structure looks abnormal",
+    "Statistical_report": "Uses a domain ending often linked to scams (like .xyz or .tk)",
+    "age_of_domain": "The domain is less than 6 months old",
+    "Domain_registeration_length": "The domain is registered for one year or less",
+}
+
+LOOKUP_FEATURES = ["age_of_domain", "Domain_registeration_length"]
+
+def get_red_flags(features):
+    flags = []
+    for name, message in RED_FLAG_MESSAGES.items():
+        if features.get(name) != -1:
+            continue
+        if features["having_IP_Address"] == -1 and name in LOOKUP_FEATURES:
+            continue
+        flags.append(message)
+
+    if features.get("SSLfinal_State") == 0:
+        flags.append("The SSL certificate is fake, self-signed or expired")
+
+    return flags
+
 
 @app.route("/", methods=["GET"])
 def home():
@@ -138,6 +172,7 @@ def predict():
         "confidence": round(phishing_prob if is_phishing else 1 - phishing_prob, 4),
         "risk_level": risk,
         "features": features,
+        "red_flags": get_red_flags(features),
     })
 
 
