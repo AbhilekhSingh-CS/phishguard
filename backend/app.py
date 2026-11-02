@@ -103,14 +103,19 @@ RED_FLAG_MESSAGES = {
     "Domain_registeration_length": "The domain is registered for one year or less",
 }
 
-LOOKUP_FEATURES = ["age_of_domain", "Domain_registeration_length"]
+IP_SKIP_FEATURES = [
+    "having_Sub_Domain",
+    "Statistical_report",
+    "age_of_domain",
+    "Domain_registeration_length",
+]
 
 def get_red_flags(features):
     flags = []
     for name, message in RED_FLAG_MESSAGES.items():
         if features.get(name) != -1:
             continue
-        if features["having_IP_Address"] == -1 and name in LOOKUP_FEATURES:
+        if features["having_IP_Address"] == -1 and name in IP_SKIP_FEATURES:
             continue
         flags.append(message)
 
